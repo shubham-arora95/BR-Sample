@@ -1,0 +1,72 @@
+<nav class="large-3 medium-4 columns" id="actions-sidebar">
+    <ul class="side-nav">
+        <li class="heading"><?= __('Actions') ?></li>
+        <li><?= $this->Html->link(__('New Request'), ['action' => 'add']) ?></li>
+        <li><?= $this->Html->link(__('List Books'), ['controller' => 'Books', 'action' => 'index']) ?></li>
+        <li><?= $this->Html->link(__('New Book'), ['controller' => 'Books', 'action' => 'add']) ?></li>
+        <li><?= $this->Html->link(__('List Borrowers'), ['controller' => 'Users', 'action' => 'index']) ?></li>
+        <li><?= $this->Html->link(__('New Borrower'), ['controller' => 'Users', 'action' => 'add']) ?></li>
+    </ul>
+</nav>
+<div class="requests index large-9 medium-8 columns content">
+    <h3><?= __('Borrow Requests') ?></h3>
+    <?php if($requests->count()): ?>
+    <span>There seems a request accepted by the owner for which you have to pay rent now.</span><br/><br/>
+    <table cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>  
+                 <th><?= $this->Paginator->sort('id', 'Request Id') ?></th>
+                <th><?= $this->Paginator->sort('book_id') ?></th>
+                <!-- <th><?= $this->Paginator->sort('borrower_id') ?></th> -->
+                <th><?= $this->Paginator->sort('owner_id') ?></th>
+                <th><?= $this->Paginator->sort('Weeks') ?></th>
+                <th><?= $this->Paginator->sort('ownerAck','Status') ?></th>
+                <th><?= $this->Paginator->sort('rentPaid') ?></th>
+                <th class="actions"><?= __('Actions') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($requests as $request): ?>
+            <tr>
+                <td><?= $this->Number->format($request->id) ?></td>
+                <td><?= $request->has('book') ? $this->Html->link($request->book->title, ['controller' => 'Books', 'action' => 'view', $request->book->id]) : '' ?></td>
+                <!-- <td><?= $request->has('borrower') ? $this->Html->link($request->borrower->name, ['controller' => 'Users', 'action' => 'view', $request->borrower->id]) : '' ?></td> -->
+                <td><?= $request->has('owner') ? $this->Html->link($request->owner->name, ['controller' => 'Users', 'action' => 'view', $request->owner->id]) : '' ?></td>
+                <td><?= $this->Number->format($request->Weeks) ?></td>
+                <td><?php 
+                        if($request->ownerAck == 0) echo 'Pending';
+                        elseif($request->ownerAck == 1) echo 'Accepted';
+                        elseif($request->ownerAck == 2) echo 'Declined';
+                        elseif($request->ownerAck == 3) echo 'Cancelled by borrower';
+                        elseif($request->ownerAck == 4) echo 'Issued';
+                    ?>
+                </td>
+                <td><?= h($request->rentPaid)?'Yes':'No' ?></td>
+                <td class="actions">
+                    <?= $this->Html->link(__('View'), ['action' => 'view', $request->id]) ?>
+                    <?php
+                        /* Show cancel button only if the status is pending */
+                        if($request->ownerAck == 0 || $request->ownerAck == 1)
+                            echo $this->Form->postLink(__(' | Cancel'), ['action' => 'cancelIssueRequest', $request->id], ['confirm' => __('Are you sure you want to cancel this request for this book?', $request->id)]);
+                        if($request->ownerAck == '1')
+                        {
+                            echo "</td><b>* Pay your rent for request id $request->id from";
+                            echo $this->Html->link(__(' here.'), ['action' => 'payRent', $request->id]);
+                            echo "</b>";
+                        }
+                    ?>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <div class="paginator">
+        <ul class="pagination">
+            <?= $this->Paginator->prev('< ' . __('previous')) ?>
+            <?= $this->Paginator->numbers() ?>
+            <?= $this->Paginator->next(__('next') . ' >') ?>
+        </ul>
+        <p><?= $this->Paginator->counter() ?></p>
+    </div>
+    <?php else: echo "Oops! It seems like there is nothing to show here."; endif;?>
+</div>
